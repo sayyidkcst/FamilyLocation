@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>KCST Locator · Family</title>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(145deg, #eef2f9 0%, #dce5f0 100%);
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* ---- ACCESS GATE / AUTH CARD ---- */
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 20, 35, 0.6);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+      transition: opacity 0.35s ease, visibility 0.35s;
+    }
+    .auth-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .auth-card {
+      background: white;
+      max-width: 440px;
+      width: 100%;
+      border-radius: 48px;
+      padding: 2.5rem 2rem 2.2rem;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.25);
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+    .auth-card .icon-lock {
+      font-size: 2.8rem;
+      color: #1a2c3e;
+      background: #eef2f9;
+      width: 80px;
+      height: 80px;
+      border-radius: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .auth-card h2 {
+      font-weight: 700;
+      color: #0b1a2b;
+      font-size: 1.7rem;
+      letter-spacing: -0.3px;
+    }
+    .auth-card p {
+      color: #5f728b;
+      margin: 10px 0 22px;
+      font-size: 0.95rem;
+    }
+    .auth-card .input-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin: 18px 0 8px;
+    }
+    .auth-card input {
+      flex: 1 1 180px;
+      padding: 14px 18px;
+      border-radius: 60px;
+      border: 2px solid #dce3ed;
+      font-size: 1rem;
+      outline: none;
+      transition: border 0.2s;
+      font-weight: 500;
+      background: #f8fafc;
+    }
+    .auth-card input:focus {
+      border-color: #4285F4;
+      background: white;
+    }
+    .auth-card .btn-auth {
+      background: #1a2c3e;
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 60px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+    }
+    .auth-card .btn-auth:hover {
+      background: #2c4058;
+      transform: translateY(-2px);
+    }
+    .auth-card .error-msg {
+      color: #dc2626;
+      background: #fee2e2;
+      padding: 10px 14px;
+      border-radius: 40px;
+      font-size: 0.9rem;
+      margin-top: 16px;
+      display: none;
+    }
+    .auth-card .error-msg.show {
+      display: block;
+    }
+
+    /* ---- MAIN APP (hidden until auth) ---- */
+    .app-wrapper {
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+      display: none;
+    }
+    .app-wrapper.active {
+      display: block;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding: 0.5rem 1rem;
+    }
+    .header h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: #1a2c3e;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: white;
+      padding: 0.6rem 1.8rem;
+      border-radius: 80px;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.05);
+    }
+    .header h1 i {
+      color: #25D366;
+    }
+    .header .sub-info {
+      margin-top: 12px;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      color: #5c6f87;
+      font-size: 0.9rem;
+    }
+    .header .sub-info span {
+      background: white;
+      padding: 6px 18px;
+      border-radius: 40px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header .sub-info i {
+      color: #4285F4;
+    }
+
+    .members-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+      gap: 24px;
+      margin-bottom: 2rem;
+    }
+
+    .member-card {
+      background: white;
+      border-radius: 32px;
+      overflow: hidden;
+      box-shadow: 0 15px 35px -12px rgba(0, 0, 0, 0.2);
+      transition: all 0.25s ease;
+      border: 1px solid rgba(255,255,255,0.5);
+    }
+    .member-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.25);
+    }
+
+    .member-image {
+      width: 100%;
+      height: 180px;
+      overflow: hidden;
+      background: #f0f4fa;
+      position: relative;
+    }
+    .member-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    .member-card:hover .member-image img {
+      transform: scale(1.03);
+    }
+    .online-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      padding: 5px 10px;
+      border-radius: 40px;
+      font-size: 0.7rem;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .online-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #22c55e;
+      display: inline-block;
+      animation: pulse 1.5s infinite;
+    }
+    .offline-dot {
+      background-color: #94a3b8;
+      animation: none;
+    }
+    @keyframes pulse {
+      0% { opacity: 0.4; transform: scale(0.8);}
+      100% { opacity: 1; transform: scale(1.2);}
+    }
+
+    .card-content {
+      padding: 1.2rem 1.2rem 1.2rem 1.2rem;
+    }
+    .member-name {
+      font-size: 1.4rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .member-name span {
+      background: #eef2ff;
+      font-size: 0.7rem;
+      padding: 4px 10px;
+      border-radius: 30px;
+      color: #2c5f9a;
+    }
+    .member-role {
+      color: #6c7a91;
+      font-size: 0.8rem;
+      margin-top: 4px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .location-coords {
+      background: #f8fafc;
+      padding: 10px 12px;
+      border-radius: 20px;
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: #1e293b;
+      margin: 12px 0;
+      word-break: break-all;
+      border: 1px solid #eef2f8;
+    }
+    .location-coords i {
+      color: #3b82f6;
+      margin-right: 6px;
+    }
+    .address-note {
+      font-size: 0.7rem;
+      color: #6c7a91;
+      margin-top: 6px;
+      padding-left: 8px;
+      border-left: 2px solid #cbd5e1;
+    }
+    .last-updated {
+      font-size: 0.7rem;
+      color: #7c8ba0;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .btn-card {
+      flex: 1;
+      padding: 10px 8px;
+      border-radius: 44px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      background: #f1f5f9;
+      color: #1e293b;
+      border: 1px solid #e2e8f0;
+    }
+    .btn-open {
+      background: #4285F4;
+      color: white;
+      border: none;
+      box-shadow: 0 2px 6px rgba(66, 133, 244, 0.3);
+    }
+    .btn-open:hover {
+      background: #3367D6;
+      transform: translateY(-2px);
+    }
+    .btn-whatsapp {
+      background: #25D366;
+      color: white;
+      border: none;
+      box-shadow: 0 2px 6px rgba(37, 211, 102, 0.3);
+    }
+    .btn-whatsapp:hover {
+      background: #20b859;
+      transform: translateY(-2px);
+    }
+    .btn-card:active {
+      transform: translateY(1px);
+    }
+
+    .global-actions {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+      padding: 0 1rem;
+    }
+    .btn-global {
+      padding: 12px 28px;
+      border-radius: 50px;
+      font-weight: 600;
+      border: none;
+      background: white;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: 0.2s;
+    }
+    .btn-global-primary {
+      background: #25D366;
+      color: white;
+    }
+    .btn-global-primary:hover {
+      background: #20b859;
+      transform: translateY(-2px);
+    }
+    .toast-msg {
+      position: fixed;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%) scale(0.9);
+      background: #1e293b;
+      color: white;
+      padding: 12px 28px;
+      border-radius: 60px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      opacity: 0;
+      transition: 0.2s;
+      pointer-events: none;
+      z-index: 1000;
+      white-space: nowrap;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .toast-msg.show {
+      opacity: 1;
+      transform: translateX(-50%) scale(1);
+    }
+    footer {
+      text-align: center;
+      font-size: 0.7rem;
+      padding: 2rem 1rem 1rem;
+      color: #6f7c91;
+    }
+    footer i {
+      margin: 0 4px;
+    }
+    @media (max-width: 700px) {
+      .members-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      .member-image {
+        height: 160px;
+      }
+      .toast-msg {
+        white-space: normal;
+        text-align: center;
+        width: 90%;
+        font-size: 0.75rem;
+      }
+      .auth-card {
+        padding: 2rem 1.5rem;
+      }
+      .header .sub-info {
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+<br>
+<!-- ========== AUTH GATE ========== -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-card">
+    <div class="icon-lock"><i class="fas fa-users"></i></div>
+    <h2>Members Access Only</h2>
+    <p>Enter your name to access location board</p>
+    <div class="input-group">
+      <input type="text" id="nameInput" placeholder="Enter your name..." autocomplete="off">
+      <button class="btn-auth" id="authBtn"><i class="fas fa-arrow-right"></i> Enter</button>
+    </div>
+<br>
+
+<hr>
+<br>
+<h2> KCST Media Technology</h2>
+
+    <div class="error-msg" id="authError"><i class="fas fa-times-circle"></i> You are Not the KCST Family Member</div>
+  </div>
+</div>
+
+<br>
+
+<!-- ========== MAIN APP ========== -->
+<div class="app-wrapper" id="appWrapper">
+  <div class="app-container">
+    <div class="header">
+      <h1><i class="fab fa-whatsapp"></i> KCST Location Manager</h1>
+      <div class="sub-info">
+        <span><i class="fas fa-map-marker-alt"></i> KCST Media Technology</span>
+        <span><i class="fas fa-phone"></i> 96 333 151 77</span>
+      </div>
+    </div>
+
+    <div class="members-grid" id="membersGrid"></div>
+
+    <div class="global-actions">
+      <button class="btn-global btn-global-primary" id="shareAllBtn">
+        <i class="fab fa-whatsapp"></i> Share All on WhatsApp
+      </button>
+    </div>
+    <footer>
+      <i class="fas fa-home"></i> KCST Media Technology · 
+      <i class="fas fa-phone"></i> 96 333 151 77
+    </footer>
+  </div>
+</div>
+
+<div id="toastMsg" class="toast-msg">📍 Ready</div>
+
+<script>
+  // ============================================================
+  // AUTHENTICATION LOGIC (Babu,Shidu,Hashi,Hadi,Afi,Anu)
+  // ============================================================
+  const ALLOWED_NAMES = ['babu', 'shidu', 'hashi', 'hadi', 'afi', 'anu'];
+
+  const authOverlay = document.getElementById('authOverlay');
+  const appWrapper = document.getElementById('appWrapper');
+  const nameInput = document.getElementById('nameInput');
+  const authBtn = document.getElementById('authBtn');
+  const authError = document.getElementById('authError');
+
+  function attemptAuth() {
+    const raw = nameInput.value.trim();
+    if (!raw) {
+      authError.textContent = '⚠️ Please enter your name.';
+      authError.classList.add('show');
+      return;
+    }
+    const normalized = raw.toLowerCase();
+    if (ALLOWED_NAMES.includes(normalized)) {
+      // Success: hide auth, show app
+      authOverlay.classList.add('hidden');
+      appWrapper.classList.add('active');
+      authError.classList.remove('show');
+      showToast(`👋 Welcome, ${raw}!`, 2000);
+      // init app after auth
+      initApp();
+    } else {
+      authError.textContent = '❌ You are Not the KCST Family Member';
+      authError.classList.add('show');
+      // shake effect (simple)
+      authError.style.animation = 'none';
+      setTimeout(() => authError.style.animation = 'shake 0.3s', 10);
+    }
+  }
+
+  // Enter key
+  nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') attemptAuth(); });
+  authBtn.addEventListener('click', attemptAuth);
+
+  // focus input
+  window.addEventListener('load', () => nameInput.focus());
+
+  // ============================================================
+  // MAIN APP — FAMILY LOCATOR (NO GEOLOCATION)
+  // ============================================================
+  let allMembers = [];
+
+  const familyBase = [
+    { id: "0", name: "Sayyid Manzil", role: "Vadakkummuri", color: "#3b82f6", avatarIcon: "fa-user-tie", imageUrl: "https://articles-img.sftcdn.net/t_article_cover_m/auto-mapping-folder/sites/3/2024/11/IMG_0410.jpeg", lat: 11.255668829522534, lng: 76.05187011911131, isOnline: true },
+    { id: "A", name: "Moly", role: "Pookottumpadam", color: "#3b82f6", avatarIcon: "fa-user-tie", imageUrl: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjwaxT_3raHtBEC79Xwl78nUJJYjM76dTi-hIWo2E9MhchfDuwkRAiwOyKwxPFBfydM8uUQ8yxuhD2iOHQkHdiG2OVKlk3igu-YKhThz7lfKi0iFc6MWoc8gYLlfILmCcjJ8TyFILJKeRs/s1600/yaseen+2-746817.jpg", lat: 11.23953234616334, lng: 76.28823283992853, isOnline: true },
+    { id: "B", name: "Koyamon Konnara", role: "Edavannapara", color: "#ec489a", avatarIcon: "fa-user-circle", imageUrl: "https://articles-img.sftcdn.net/t_article_cover_m/auto-mapping-folder/sites/3/2024/11/IMG_0410.jpeg", lat: 11.267339712020709, lng: 75.9742100000001, isOnline: true },
+    { id: "C", name: "Kadapadi Veed", role: "Kadapadi Kondoty", color: "#10b981", avatarIcon: "fa-child", imageUrl: "https://articles-img.sftcdn.net/t_article_cover_m/auto-mapping-folder/sites/3/2024/11/IMG_0410.jpeg", lat: 11.117362244391243, lng: 75.94151753241547, isOnline: true },
+    { id: "D", name: "Cheekapalli", role: "Edavannapara", color: "#10b981", avatarIcon: "fa-child", imageUrl: "https://articles-img.sftcdn.net/t_article_cover_m/auto-mapping-folder/sites/3/2024/11/IMG_0410.jpeg", lat: 11.259261020956016, lng: 75.98102823611572, isOnline: true },
+    { id: "E", name: "Charnatha", role: "Kadalundi", color: "#10b981", avatarIcon: "fa-child", imageUrl: "https://articles-img.sftcdn.net/t_article_cover_m/auto-mapping-folder/sites/3/2024/11/IMG_0410.jpeg", lat: 11.114034845844365, lng: 75.83305614803118, isOnline: true },
+    { id: "G", name: "BICHI", role: "THIRUVAMBADI", color: "#10b981", avatarIcon: "fa-child", imageUrl: "https://articles-img.sftcdn.net/t_article_cover_m/auto-mapping-folder/sites/3/2024/11/IMG_0410.jpeg", lat: 11.356374934149587, lng: 75.98005341325549, isOnline: true },
+    { id: "H", name: "Ponnuthatha", role: "THIRUR - VARANAKARA", color: "#10b981", avatarIcon: "fa-child", imageUrl: "https://articles-img.sftcdn.net/t_article_cover_m/auto-mapping-folder/sites/3/2024/11/IMG_0410.jpeg", lat: 10.913878685272117, lng: 75.96066283470869, isOnline: true },
+    { id: "I", name: "SALUMOL", role: "NANNAMBRA", color: "#10b981", avatarIcon: "fa-child", imageUrl: "https://articles-img.sftcdn.net/t_article_cover_m/auto-mapping-folder/sites/3/2024/11/IMG_0410.jpeg", lat: 10.995136802374484, lng: 75.9045781283175, isOnline: true },
+    { id: "J", name: "IRUMBUKAM", role: "THIRUVAMBADI", color: "#10b981", avatarIcon: "fa-child", imageUrl: "https://articles-img.sftcdn.net/t_article_cover_m/auto-mapping-folder/sites/3/2024/11/IMG_0410.jpeg", lat: 11.378844847997971, lng: 76.01901699923593, isOnline: true },
+    { id: "F", name: "Immu Karad", role: "Parambilpidika", color: "#f59e0b", avatarIcon: "fa-user-graduate", imageUrl: "https://articles-img.sftcdn.net/t_article_cover_m/auto-mapping-folder/sites/3/2024/11/IMG_0410.jpeg", lat: 11.101614086046768, lng: 75.92341432320023, isOnline: true }
+  ];
+
+  let currentUser = {
+    id: "you",
+    name: "Sayyid Manzil",
+    role: "Vadakkummuri",
+    color: "#ef4444",
+    avatarIcon: "fa-user-astronaut",
+    imageUrl: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjAYeok55h3-GRTUNlLkomnkt3pdoSxm13gfg_p0WBk8ekh81mFb4KaxF5LJgTRKxOsvJfWizlxFupbr25evTUixj1uolw4_wby7VzUFex0FeeKfmqvk9QKbeu1-0LboG3HHYUabhwqohg/s400/20150125_195456.jpg",
+    lat: 11.255668834235149,
+    lng: 76.0518727694972,
+    address: "Home / Current Location",
+    isOnline: true
+  };
+
+  function showToast(msg, duration = 2500) {
+    const toast = document.getElementById('toastMsg');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), duration);
+  }
+
+  function getGoogleMapsLink(lat, lng) {
+    return `https://www.google.com/maps?q=${lat},${lng}&z=16`;
+  }
+
+  window.openMemberMap = function(memberId) {
+    const member = allMembers.find(m => m.id === memberId);
+    if (!member || !member.lat || !member.lng) {
+      showToast(`📍 Location unavailable`, 1200);
+      return;
+    }
+    window.open(getGoogleMapsLink(member.lat, member.lng), '_blank');
+    showToast(`🗺️ Opening Google Maps for ${member.name}`, 1500);
+  };
+
+  window.shareOnWhatsApp = function(memberId) {
+    const member = allMembers.find(m => m.id === memberId);
+    if (!member) { showToast(`⚠️ Member not found`, 1500); return; }
+    if (!member.lat || !member.lng) { showToast(`⚠️ Location unavailable`, 1500); return; }
+    const mapLink = getGoogleMapsLink(member.lat, member.lng);
+    const addressText = member.address ? `\n📍 ${member.address}` : '';
+    const message = `📍 *${member.name}* (${member.role}) is currently at:${addressText}\n\n🗺️ Google Maps Location:\n${mapLink}\n\n📌 Coordinates:\nLatitude: ${member.lat.toFixed(6)}\nLongitude: ${member.lng.toFixed(6)}\n\nSent from KCST Family Locator`;
+    const encoded = encodeURIComponent(message);
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    window.open(isMobile ? `https://wa.me/?text=${encoded}` : `https://web.whatsapp.com/send?text=${encoded}`, '_blank');
+    showToast(`📱 Opening WhatsApp for ${member.name}...`, 2000);
+  };
+
+  window.shareAllOnWhatsApp = function() {
+    let message = `🏠 *FAMILY LOCATIONS*\n━━━━━━━━━━━━━━━━━━\n\n`;
+    allMembers.forEach(m => {
+      const mapLink = getGoogleMapsLink(m.lat, m.lng);
+      const addr = m.address ? `📍 ${m.address}\n` : '';
+      message += `👤 *${m.name}* (${m.role})\n${addr}📌 ${m.lat.toFixed(6)}, ${m.lng.toFixed(6)}\n🗺️ ${mapLink}\n\n━━━━━━━━━━━━━━━━━━\n\n`;
+    });
+    message += `Sent from Family Locator App`;
+    const encoded = encodeURIComponent(message);
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    window.open(isMobile ? `https://wa.me/?text=${encoded}` : `https://web.whatsapp.com/send?text=${encoded}`, '_blank');
+    showToast(`📱 Opening WhatsApp with all locations...`, 2000);
+  };
+
+  function renderCards() {
+    const container = document.getElementById('membersGrid');
+    if (!container) return;
+    if (!allMembers.length) {
+      container.innerHTML = '<div style="text-align:center; padding: 40px;">👪 Loading family members...</div>';
+      return;
+    }
+    container.innerHTML = '';
+    allMembers.forEach(member => {
+      const latFixed = member.lat.toFixed(6);
+      const lngFixed = member.lng.toFixed(6);
+      const onlineStatus = member.isOnline;
+      const statusText = onlineStatus ? 'Online' : 'Offline';
+      const youBadge = member.id === 'you' ? '<span style="background:#fee2e2; padding:2px 8px; border-radius:20px; font-size:0.7rem;">you</span>' : '';
+      const lastSeen = new Date().toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' });
+      const addressHtml = member.address ? `<div class="address-note"><i class="fas fa-location-dot"></i> ${member.address}</div>` : '';
+      
+      const card = document.createElement('div');
+      card.className = 'member-card';
+      card.innerHTML = `
+        <div class="member-image">
+          <img src="${member.imageUrl}" alt="${member.name}" onerror="this.src='https://via.placeholder.com/300x180?text=Family+Member'">
+          <div class="online-badge">
+            <span class="online-dot ${!onlineStatus ? 'offline-dot' : ''}"></span>
+            <span>${statusText}</span>
+          </div>
+        </div>
+        <div class="card-content">
+          <div class="member-name">
+            ${member.name} ${youBadge}
+          </div>
+          <div class="member-role">
+            <i class="fas ${member.avatarIcon}" style="color: ${member.color}"></i> ${member.role}
+            <span style="margin-left: auto; font-size:0.7rem;"><i class="far fa-clock"></i> ${lastSeen}</span>
+          </div>
+          <div class="location-coords">
+            <i class="fas fa-map-marker-alt"></i> ${latFixed}, ${lngFixed}
+          </div>
+          ${addressHtml}
+          <div class="last-updated">
+            <i class="fab fa-google" style="color:#4285F4;"></i> Click to open in Google Maps
+          </div>
+          <div class="button-group">
+            <button class="btn-card btn-open" onclick="openMemberMap('${member.id}')">
+              <i class="fab fa-google"></i> Open in Google Maps
+            </button>
+            <button class="btn-card btn-whatsapp" onclick="shareOnWhatsApp('${member.id}')">
+              <i class="fab fa-whatsapp"></i> WhatsApp Share
+            </button>
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function buildFullMemberList() {
+    allMembers = [...familyBase, { ...currentUser }];
+    renderCards();
+  }
+
+  function initApp() {
+    buildFullMemberList();
+    document.getElementById('shareAllBtn')?.addEventListener('click', window.shareAllOnWhatsApp);
+    setTimeout(() => { showToast(`✅ ${allMembers.length} family members loaded`, 2000); }, 500);
+  }
+
+  // inject shake keyframe
+  const style = document.createElement('style');
+  style.textContent = `@keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-4px); } 100% { transform: translateX(0); } }`;
+  document.head.appendChild(style);
+</script>
+</body>
+</html>
